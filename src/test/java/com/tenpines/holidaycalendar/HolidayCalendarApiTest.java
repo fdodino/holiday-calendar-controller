@@ -52,9 +52,13 @@ public class HolidayCalendarApiTest {
 
     @Test
     public void cuandoSeCreaUnCalendarioSeObtienenSusDatosComoRespuesta() throws Exception {
+        Matcher<?> id = numerico();
         crearCalendario("Mi calendario")
                 .andExpect(createdResponseMatching(
-                        jsonCalendarioCon(numerico(), equalTo("Mi calendario"))
+                        all(
+                                jsonPath("$.id", id),
+                                jsonPath("$.nombre", equalTo("Mi calendario"))
+                        )
                 ));
     }
 
@@ -105,6 +109,7 @@ public class HolidayCalendarApiTest {
                 )));
     }
 
+    // NO DAR!
     @Test
     public void noSePuedeRealizarUnaPeticionSiUnaPropiedadEsNull() throws Exception {
         var jsonCalendario = jsonCalendario("Mi calendario 1");
@@ -206,13 +211,6 @@ public class HolidayCalendarApiTest {
                 matcher.match(result);
             }
         };
-    }
-
-    private ResultMatcher jsonCalendarioCon(Matcher<?> id, Matcher<?> nombre) {
-        return all(
-                jsonPath("$.id", id),
-                jsonPath("$.nombre", nombre)
-        );
     }
 
     private Matcher<Object> numerico() {
