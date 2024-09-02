@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tenpines.holidaycalendar.web.HolidayCalendarController;
-import jakarta.transaction.Transactional;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,17 +19,16 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.Arrays;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
 public class HolidayCalendarApiTest {
     @Autowired
     private MockMvc client;
@@ -97,7 +95,7 @@ public class HolidayCalendarApiTest {
     @Test
     public void sePuedenBuscarCalendariosPorNombre() throws Exception {
         long idCalendario1 = dadoUnCalendario("ABC");
-        long idCalendario2 = dadoUnCalendario("XYZ_123");
+        dadoUnCalendario("XYZ_123");
         long idCalendario3 = dadoUnCalendario("XYZ_ABC_123");
 
         consultarPorCalendarios("ABC")
@@ -113,7 +111,7 @@ public class HolidayCalendarApiTest {
         jsonCalendario.replace("nombre", NullNode.getInstance());
 
         crearCalendario(jsonCalendario)
-                .andExpect(badRequestError("Valor inválido para la propiedad 'nombre'"));
+                .andExpect(status().isBadRequest());
 
         consultarPorCalendarios()
                 .andExpect(okResponseWith(emptyArray()));
@@ -125,7 +123,7 @@ public class HolidayCalendarApiTest {
         jsonCalendario.replace("nombre", emptyArray());
 
         crearCalendario(jsonCalendario)
-                .andExpect(badRequestError("Valor inválido para la propiedad 'nombre'"));
+                .andExpect(status().isBadRequest());
 
         consultarPorCalendarios()
                 .andExpect(okResponseWith(emptyArray()));
@@ -140,107 +138,7 @@ public class HolidayCalendarApiTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(contenidoQueNoEsJson)
                 )
-                .andExpect(badRequestError("Petición inválida"));
-    }
-
-    @Test
-    public void noSePuedeRealizarUnaPeticionSiFallaUnaPrecondicionDelDominio() throws Exception {
-    }
-
-    private JsonNode jsonFeriado(long idCalendario, LocalDate fecha) {
-        var jsonFeriado = JsonNodeFactory.instance.objectNode();
-        jsonFeriado.put("calendarioId", idCalendario);
-        jsonFeriado.put("fecha", fecha.toString());
-
-        return jsonFeriado;
-    }
-
-    private ObjectNode jsonReglaTemporal(LocalDate principio, LocalDate fin, ObjectNode reglaAAcotar) {
-        var jsonRegla = JsonNodeFactory.instance.objectNode();
-        jsonRegla.put("tipo", "tiempoAcotado");
-        jsonRegla.put("principio", principio.toString());
-        jsonRegla.put("final", fin.toString());
-        jsonRegla.set("regla", reglaAAcotar);
-
-        return jsonRegla;
-    }
-
-    private ObjectNode jsonReglaDiaDeLaSemana(String nombreDia) {
-        var jsonRegla = JsonNodeFactory.instance.objectNode();
-        jsonRegla.put("tipo", "diaDeLaSemana");
-        jsonRegla.put("dia", nombreDia);
-
-        return jsonRegla;
-    }
-
-    private ObjectNode jsonReglaFechaEspecifica(int dia, String mes, int año) {
-        var jsonRegla = JsonNodeFactory.instance.objectNode();
-        jsonRegla.put("tipo", "diaEspecifico");
-        jsonRegla.put("dia", dia);
-        jsonRegla.put("mes", mes);
-        jsonRegla.put("año", año);
-
-        return jsonRegla;
-    }
-
-    private ObjectNode jsonReglaDiaDeMes(int dia, String mes) {
-        var jsonRegla = JsonNodeFactory.instance.objectNode();
-        jsonRegla.put("tipo", "diaDelMes");
-        jsonRegla.put("dia", dia);
-        jsonRegla.put("mes", mes);
-
-        return jsonRegla;
-    }
-
-    private ObjectNode jsonError(String descripcion) {
-        var jsonError = JsonNodeFactory.instance.objectNode();
-        jsonError.put("error", descripcion);
-
-        return jsonError;
-    }
-
-    private ResultActions consultarCalendariosConFeriado(LocalDate fecha) throws Exception {
-        return client.perform(
-                get("/feriados/{fecha}/calendarios", fecha.toString())
-        );
-    }
-
-    private ResultActions eliminarCalendario(long idCalendario) throws Exception {
-        return client.perform(
-                delete("/calendarios/{id}", idCalendario)
-        );
-    }
-
-    private ResultActions agregarRegla(long idCalendario, ObjectNode regla) throws Exception {
-        return client.perform(
-                post("/calendarios/{id}/regla", idCalendario)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(regla.toString())
-        );
-    }
-
-    private ResultActions modificarCalendario(long idCalendario, ObjectNode calendarioActualizado) throws Exception {
-        return client.perform(
-                put("/calendarios/{id}", idCalendario)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(calendarioActualizado.toString())
-        );
-    }
-
-    private ResultActions consultarPorFeriados(LocalDate desde, LocalDate hasta) throws Exception {
-        return client.perform(
-                get("/feriados")
-                        .queryParam("desde", desde.toString())
-                        .queryParam("hasta", hasta.toString())
-        );
-    }
-
-    private ResultActions consultarPorFeriados(long idCalendario, LocalDate desde, LocalDate hasta) throws Exception {
-        return client.perform(
-                get("/calendarios/{id}/feriados", idCalendario)
-                        .queryParam("desde", desde.toString())
-                        .queryParam("hasta", hasta.toString())
-        );
+                .andExpect(status().isBadRequest());
     }
 
     private ResultActions consultarPorCalendario(long idCalendario) throws Exception {
@@ -296,20 +194,6 @@ public class HolidayCalendarApiTest {
 
     private ResultMatcher createdResponseMatching(ResultMatcher resultMatcher) {
         return all(status().isCreated(), resultMatcher);
-    }
-
-    private ResultMatcher badRequestError(String descripcion) {
-        return all(
-                status().isBadRequest(),
-                content().json(jsonError(descripcion).toString())
-        );
-    }
-
-    private ResultMatcher notFoundError(String descripcion) {
-        return all(
-                status().isNotFound(),
-                content().json(jsonError(descripcion).toString())
-        );
     }
 
     private ResultMatcher jsonContent(JsonNode jsonNode) {

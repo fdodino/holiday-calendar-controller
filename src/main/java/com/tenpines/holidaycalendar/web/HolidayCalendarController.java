@@ -35,6 +35,10 @@ public class HolidayCalendarController {
     @ResponseStatus(HttpStatus.CREATED)
     public HolidayCalendarResponse crearCalendario(@RequestBody HolidayCalendarRequest request) {
         var nombre = request.nombre();
+        if (nombre == null) {
+            throw new BusinessException("El calendario debe tener nombre");
+        }
+
 
         var calendarioNuevo = new HolidayCalendar(nombre, Collections.emptyList());
         calendarios.add(calendarioNuevo);
