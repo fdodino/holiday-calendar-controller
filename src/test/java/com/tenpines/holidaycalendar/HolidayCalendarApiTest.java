@@ -52,11 +52,11 @@ public class HolidayCalendarApiTest {
 
     @Test
     public void cuandoSeCreaUnCalendarioSeObtienenSusDatosComoRespuesta() throws Exception {
-        Matcher<?> id = numerico();
         crearCalendario("Mi calendario")
                 .andExpect(createdResponseMatching(
                         all(
-                                jsonPath("$.id", id),
+                                // podemos empezar hardcodeando el id
+                                jsonPath("$.id", numerico()),
                                 jsonPath("$.nombre", equalTo("Mi calendario"))
                         )
                 ));
